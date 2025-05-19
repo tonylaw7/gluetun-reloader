@@ -1,0 +1,38 @@
+version: "3.8"
+
+services:
+  gluetun:
+    image: qmcgaw/gluetun
+    container_name: gluetun
+    ports:
+      - "8000:8000"
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - VPN_SERVICE_PROVIDER=protonvpn
+      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES}
+      - SERVER_COUNTRIES=Netherlands
+      - HTTP_CONTROL_SERVER_ADDRESS=:8000
+      - HTTP_CONTROL_SERVER_AUTH_CONFIG_FILEPATH=/gluetun/auth/config.toml
+    volumes:
+      - ./gluetun-auth/config.toml:/gluetun/auth/config.toml:ro
+    networks:
+      - gluetun_net
+
+  gluetun-stopper:
+    build: .
+    depends_on:
+      - gluetun
+    restart: always
+    environment:
+      - GLUETUN_URL=${GLUETUN_URL}
+      - USERNAME=${USERNAME}
+      - PASSWORD=${PASSWORD}
+      - INTERVAL_HOURS=${INTERVAL_HOURS}
+    networks:
+      - gluetun_net
+
+networks:
+  gluetun_net:
+    driver: bridge
